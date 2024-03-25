@@ -73,7 +73,7 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
     space.fence();
     mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest,
                  tag, comm, &req.mpi_req());
-    req.keep_until_wait(args.view);
+    req.drop_at_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
     mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
