@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <memory>
 
 #include <Kokkos_Core.hpp>
 
@@ -33,11 +33,11 @@ namespace KokkosComm::Impl {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
           KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
-                      int tag, MPI_Comm comm) {
+std::shared_ptr<Req> isend(const ExecSpace &space, const SendView &sv, int dest,
+                           int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
-  KokkosComm::Req req;
+  auto req = std::make_shared<Req>();
 
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;
@@ -72,14 +72,14 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
     MpiArgs args = Packer::pack(space, sv);
     space.fence();
     mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                 tag, comm, &req.mpi_req());
-    req.keep_until_wait(args.view);
+                 tag, comm, &req->mpi_req());
+    req->keep_until_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
     mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                 dest, tag, comm, &req.mpi_req());
+                 dest, tag, comm, &req->mpi_req());
     if (KCT::is_reference_counted()) {
-      req.keep_until_wait(sv);
+      req->keep_until_wait(sv);
     }
   }
 
