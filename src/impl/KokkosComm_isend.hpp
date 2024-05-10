@@ -33,11 +33,11 @@ namespace KokkosComm::Impl {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
           KokkosView SendView>
-std::shared_ptr<Req> isend(const ExecSpace &space, const SendView &sv, int dest,
+std::shared_ptr<Req<ExecSpace>> isend(const ExecSpace &space, const SendView &sv, int dest,
                            int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
-  auto req = std::make_shared<Req>();
+  auto req = std::make_shared<Req<ExecSpace>>();
 
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;

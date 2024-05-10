@@ -52,7 +52,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
   auto ym1_s = Kokkos::subview(v, make_pair(1, nx + 1), 1, Kokkos::ALL);
   auto ym1_r = Kokkos::subview(v, make_pair(1, nx + 1), 0, Kokkos::ALL);
 
-  std::vector<KokkosComm::Req> reqs;
+  std::vector<KokkosComm::Req<Space>> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
   reqs.push_back(KokkosComm::isend(space, xp1_s, get_rank(xp1, ry), 0, comm));
   reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 1, comm));
@@ -65,7 +65,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
   KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 3, comm);
 
   // wait for comm
-  for (KokkosComm::Req &req : reqs) {
+  for (auto &req : reqs) {
     req.wait();
   }
 }

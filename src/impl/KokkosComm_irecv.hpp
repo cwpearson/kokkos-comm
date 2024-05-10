@@ -45,14 +45,14 @@ struct IrecvUnpacker {
 };
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src,
+std::shared_ptr<Req<ExecSpace>> irecv(const ExecSpace &space, RecvView &rv, int src,
                            int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");
 
   using KCT  = KokkosComm::Traits<RecvView>;
   using KCPT = KokkosComm::PackTraits<RecvView>;
 
-  auto req = std::make_shared<Req>();
+  auto req = std::make_shared<Req<ExecSpace>>();
 
   if (KCPT::needs_unpack(rv)) {
     using Packer = typename KCPT::packer_type;

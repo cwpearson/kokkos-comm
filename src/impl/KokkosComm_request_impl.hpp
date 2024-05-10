@@ -17,11 +17,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 
+template <KokkosExecutionSpace ExecSpace>
 class Req {
   // a type-erased callable. Req uses these to attach callbacks to be executed
   // at wait
@@ -87,7 +89,7 @@ class Req {
     if (wait_fence_) {
       wait_fence_->fence();
     }
-    wait_fence_ = nullptr;
+    wait_fence_ = std::nullopt;
   }
 
   // Keep a reference to this view around until wait() is called.
@@ -109,21 +111,24 @@ class Req {
     wait_callbacks_.push_back(std::make_shared<InvokableHolder<Fn>>(f));
   }
 
-  template <typename ExecSpace>
   void fence_at_wait(const ExecSpace &space) {
     // TODO: only fence once if the same space is provided multiple times
     if (wait_fence_) {
       Kokkos::abort("Req is already fencing a space!");
     }
 
-    wait_fence_ = std::make_shared<SpaceHolder<ExecSpace>>(space);
+    wait_fence_ = space;
+  }
+
+  const std::optional<ExecSpace> &space_instance() const {
+    return wait_fence_;
   }
 
  private:
   MPI_Request req_;
   std::vector<std::shared_ptr<ViewHolderBase>> wait_drops_;
   std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
-  std::shared_ptr<SpaceHolderBase> wait_fence_;
+  std::optional<ExecSpace> wait_fence_;
 };
 
 }  // namespace KokkosComm::Impl

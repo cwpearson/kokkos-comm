@@ -27,6 +27,7 @@
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_waitall.hpp"
 
 #include <Kokkos_Core.hpp>
 
@@ -34,7 +35,7 @@ namespace KokkosComm {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
           KokkosView SendView>
-Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
+Req<ExecSpace> isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   return Req(Impl::isend<SendMode>(space, sv, dest, tag, comm));
 }
@@ -53,9 +54,12 @@ void recv(const ExecSpace &space, RecvView &sv, int src, int tag,
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
+Req<ExecSpace> irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
   return Req(Impl::irecv(space, rv, src, tag, comm));
 }
+
+// template <KokkosExecutionSpace ExecSpace, typename... Reqs>
+using Impl::wait_all;
 
 }  // namespace KokkosComm

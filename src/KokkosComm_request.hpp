@@ -22,15 +22,21 @@
 
 namespace KokkosComm {
 
+template <KokkosExecutionSpace ExecSpace>
 class Req {
  public:
-  Req() : impl_(std::make_shared<Impl::Req>()) {}
-  Req(const std::shared_ptr<Impl::Req> &impl) : impl_(impl) {}
+
+  using execution_space = ExecSpace;
+  Req() : impl_(std::make_shared<Impl::Req<execution_space>>()) {}
+  Req(const std::shared_ptr<Impl::Req<execution_space>> &impl) : impl_(impl) {}
   MPI_Request &mpi_req() { return impl_->mpi_req(); }
   void wait() { impl_->wait(); }
+  const std::optional<execution_space> &space_instance() const {
+    return impl_->space_instance();
+  }
 
  private:
-  std::shared_ptr<Impl::Req> impl_;
+  std::shared_ptr<Impl::Req<execution_space>> impl_;
 };
 
 }  // namespace KokkosComm
